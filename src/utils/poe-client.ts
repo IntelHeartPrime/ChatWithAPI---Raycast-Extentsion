@@ -5,7 +5,8 @@ import fetch from "node-fetch";
 
 export interface PoeClientConfig {
   apiKey: string;
-  botName: string;
+  model: string;
+  apiBaseUrl: string;
   proxyUrl?: string;
   refererUrl?: string;
   appTitle?: string;
@@ -41,9 +42,30 @@ function getProxyAgent(configProxyUrl?: string) {
 
 export class PoeClient {
   private client: OpenAI;
-  private botName: string;
-  private refererUrl?: string;
-  private appTitle?: string;
+  private model: string;
+
+  private static normalizeBaseUrl(url: string): string {
+    const trimmedUrl = url.trim().replace(/\/+$/, "");
+
+    try {
+      const parsed = new URL(trimmedUrl);
+      const pathname = parsed.pathname.replace(/\/+$/, "");
+
+      if (!pathname || pathname === "") {
+        parsed.pathname = "/v1";
+        return parsed.toString().replace(/\/+$/, "");
+      }
+
+      if (pathname === "/openai") {
+        parsed.pathname = "/openai/v1";
+        return parsed.toString().replace(/\/+$/, "");
+      }
+
+      return parsed.toString().replace(/\/+$/, "");
+    } catch {
+      return trimmedUrl;
+    }
+  }
 
   constructor(config: PoeClientConfig) {
     const headers: Record<string, string> = {};
@@ -57,10 +79,11 @@ export class PoeClient {
     }
 
     const httpAgent = getProxyAgent(config.proxyUrl);
+    const normalizedBaseUrl = PoeClient.normalizeBaseUrl(config.apiBaseUrl);
 
     this.client = new OpenAI({
       apiKey: config.apiKey,
-      baseURL: "https://api.poe.com/v1",
+      baseURL: normalizedBaseUrl,
       defaultHeaders: headers,
       timeout: 60000, // 60 seconds timeout
       maxRetries: 0, // 禁用重试以便更快看到错误
@@ -74,9 +97,7 @@ export class PoeClient {
       },
     });
 
-    this.botName = config.botName;
-    this.refererUrl = config.refererUrl;
-    this.appTitle = config.appTitle;
+    this.model = config.model;
   }
 
   async *streamChat(messages: Message[]): AsyncGenerator<string, void, unknown> {
@@ -87,7 +108,7 @@ export class PoeClient {
 
     try {
       const stream = await this.client.chat.completions.create({
-        model: this.botName,
+        model: this.model,
         messages: formattedMessages,
         stream: true,
       });
@@ -103,11 +124,9 @@ export class PoeClient {
       if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout')) {
         throw new Error('请求超时，请检查网络连接或稍后重试');
       } else if (err.status === 401) {
-        throw new Error('API Key 无效，请在设置中检查你的 Poe API Key');
+        throw new Error('API Key 无效，请在设置中检查 API Key');
       } else if (err.status === 429) {
-        throw new Error('请求过于频繁，请稍后再试（每分钟限制 500 次请求）');
-      } else if (err.status === 402) {
-        throw new Error('积分不足，请访问 poe.com 充值');
+        throw new Error('请求过于频繁，请稍后再试');
       } else {
         throw new Error(err.message || '请求失败，请稍后重试');
       }
@@ -122,7 +141,7 @@ export class PoeClient {
 
     try {
       const completion = await this.client.chat.completions.create({
-        model: this.botName,
+        model: this.model,
         messages: formattedMessages,
       });
 
@@ -133,13 +152,11 @@ export class PoeClient {
       if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout')) {
         throw new Error(`请求超时 (${err.code || 'timeout'})，请检查：1) 代理是否运行 2) 网络连接`);
       } else if (err.status === 401) {
-        throw new Error('API Key 无效，请在设置中检查你的 Poe API Key');
+        throw new Error('API Key 无效，请在设置中检查 API Key');
       } else if (err.status === 404) {
-        throw new Error(`Bot '${this.botName}' 不存在，请检查 Bot 名称`);
+        throw new Error(`模型 '${this.model}' 或接口地址不存在，请检查 Model 和 API Base URL`);
       } else if (err.status === 429) {
-        throw new Error('请求过于频繁，请稍后再试（每分钟限制 500 次请求）');
-      } else if (err.status === 402) {
-        throw new Error('积分不足，请访问 poe.com 充值');
+        throw new Error('请求过于频繁，请稍后再试');
       } else {
         throw new Error(`${err.message || '请求失败'} (status: ${err.status || 'unknown'})`);
       }

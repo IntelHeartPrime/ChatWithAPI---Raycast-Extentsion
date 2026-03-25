@@ -1,4 +1,14 @@
-# Poe-talk Changelog
+# Poe-talk / LLM Talk Changelog
+
+## [v1.7.0] - 2026-03-25
+
+### OpenAI 兼容 API
+
+- **可配置端点**：`API Key`、`Model`、`API Base URL`，支持 OpenAI 官方与 JieKou AI、DeepSeek、OpenRouter、Ollama 等中转或兼容服务。
+- **Base URL 规范化**：根路径自动补 `/v1`；`.../openai` 自动补为 `.../openai/v1`。
+- **偏好项重命名**：`poeApiKey` → `apiKey`，`botName` → `model`，新增 `apiBaseUrl`（Raycast 中需重新填写一次设置）。
+- **文档与脚本**：README / USAGE / PROXY / ARCHITECTURE / `setup.sh` / `detect-proxy.sh` 已按通用 LLM 场景更新。
+- **本地测试**：`test-api.sh`、`test-proxy-node.js` 改为通过 `API_KEY`、`API_BASE_URL`、`MODEL`、`PROXY_URL` 测试任意 OpenAI 兼容端点；`raycast-env.d.ts` 与 `package.json` 偏好字段对齐。
 
 ## [v1.6.0] - 2025-11-24
 

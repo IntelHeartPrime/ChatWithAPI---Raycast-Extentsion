@@ -1,7 +1,6 @@
 import {
   ActionPanel,
   Action,
-  getPreferenceValues,
   showToast,
   Toast,
   Icon,
@@ -13,6 +12,7 @@ import {
 } from "@raycast/api";
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { PoeClient } from "./utils/poe-client";
+import { getLlmPreferences, type LlmPreferences } from "./utils/llm-preferences";
 import {
   Conversation,
   Message,
@@ -20,14 +20,6 @@ import {
   generateConversationId,
   generateConversationTitle,
 } from "./utils/history";
-
-interface Preferences {
-  poeApiKey: string;
-  botName: string;
-  proxyUrl?: string;
-  refererUrl?: string;
-  appTitle?: string;
-}
 
 // Cache for formatted times to avoid recalculation
 const timeFormatCache = new Map<string, string>();
@@ -57,7 +49,7 @@ function formatRelativeTime(timestamp: number): string {
   // Limit cache size
   if (timeFormatCache.size > 100) {
     const firstKey = timeFormatCache.keys().next().value;
-    timeFormatCache.delete(firstKey);
+    if (firstKey !== undefined) timeFormatCache.delete(firstKey);
   }
   
   return result;
@@ -91,7 +83,7 @@ function getWordCount(text: string): { chars: number; words: number } {
   // Limit cache size
   if (wordCountCache.size > 50) {
     const firstKey = wordCountCache.keys().next().value;
-    wordCountCache.delete(firstKey);
+    if (firstKey !== undefined) wordCountCache.delete(firstKey);
   }
   
   wordCountCache.set(text, result);
@@ -99,7 +91,7 @@ function getWordCount(text: string): { chars: number; words: number } {
 }
 
 export default function Command() {
-  const preferences = getPreferenceValues<Preferences>();
+  const preferences = getLlmPreferences();
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingResponse, setStreamingResponse] = useState("");
@@ -142,7 +134,7 @@ function ChatView({
   isSaved: boolean;
   setIsSaved: (saved: boolean) => void;
   poeClientRef: React.MutableRefObject<PoeClient | null>;
-  preferences: Preferences;
+  preferences: LlmPreferences;
 }) {
   const { push, pop } = useNavigation();
   const [showInput, setShowInput] = useState(conversation === null || conversation.messages.length === 0);
@@ -153,8 +145,12 @@ function ChatView({
       return;
     }
 
-    if (!preferences.poeApiKey) {
-      showToast(Toast.Style.Failure, "请在扩展设置中配置 Poe API Key");
+    if (!preferences.apiKey) {
+      showToast(
+        Toast.Style.Failure,
+        "API Key 未配置",
+        "请打开 Raycast 设置 → api-talk → 重新填写 API Key"
+      );
       return;
     }
 
@@ -179,7 +175,7 @@ function ChatView({
           messages: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
-          botName: preferences.botName,
+          botName: preferences.model,
         };
       }
 
@@ -187,11 +183,12 @@ function ChatView({
       currentConv.updatedAt = Date.now();
       setConversation({ ...currentConv });
 
-      // Initialize or reuse Poe client
+      // Initialize or reuse API client
       if (!poeClientRef.current) {
         poeClientRef.current = new PoeClient({
-          apiKey: preferences.poeApiKey,
-          botName: preferences.botName,
+          apiKey: preferences.apiKey,
+          model: preferences.model,
+          apiBaseUrl: preferences.apiBaseUrl,
           proxyUrl: preferences.proxyUrl,
           refererUrl: preferences.refererUrl,
           appTitle: preferences.appTitle,
@@ -243,11 +240,11 @@ function ChatView({
 
       showToast(Toast.Style.Success, "对话已保存");
     } catch (error) {
-      console.error("Error communicating with Poe:", error);
+      console.error("Error communicating with LLM API:", error);
       showToast(
         Toast.Style.Failure,
         "错误",
-        error instanceof Error ? error.message : "无法与 Poe 通信"
+        error instanceof Error ? error.message : "无法与 API 通信"
       );
     } finally {
       setIsLoading(false);
@@ -258,7 +255,7 @@ function ChatView({
     const messages = conversation?.messages || [];
     
     if (messages.length === 0 && !streamingResponse) {
-      return `# 💬 开始与 ${preferences.botName} 对话\n\n---\n\n✨ **快速开始**\n\n• 按 ⌘+Enter 发送消息\n• 所有内容支持选中复制\n• 支持 Markdown 格式\n• 代码块自动高亮\n\n---\n\n💡 **提示**: 对话会自动保存到历史记录`;
+      return `# 💬 开始与 ${preferences.model} 对话\n\n---\n\n✨ **快速开始**\n\n• 按 ⌘+Enter 发送消息\n• 所有内容支持选中复制\n• 支持 Markdown 格式\n• 代码块自动高亮\n\n---\n\n💡 **提示**: 对话会自动保存到历史记录`;
     }
     
     const parts: string[] = [];
@@ -282,7 +279,7 @@ function ChatView({
         );
       } else {
         parts.push(
-          `### 🤖 #${messageIndex} ${preferences.botName}\n\n` +
+          `### 🤖 #${messageIndex} ${preferences.model}\n\n` +
           `> 📅 ${time} · ${relativeTime} · ${chars}字\n\n` +
           `${msg.content}\n\n` +
           `---\n\n`
@@ -300,7 +297,7 @@ function ChatView({
       const { chars } = getWordCount(streamingResponse);
       
       parts.push(
-        `### 🤖 #${messageIndex} ${preferences.botName}\n\n` +
+        `### 🤖 #${messageIndex} ${preferences.model}\n\n` +
         `> ⚡ 正在输入... · 已生成 ${chars}字\n\n` +
         `${streamingResponse}█\n\n` +
         `---\n\n`
@@ -312,7 +309,7 @@ function ChatView({
     conversation?.messages.length,
     conversation?.messages[conversation?.messages.length - 1]?.timestamp,
     streamingResponse,
-    preferences.botName,
+    preferences.model,
   ]);
 
   const handleNewConversation = useCallback(() => {
@@ -333,12 +330,12 @@ function ChatView({
     () =>
       conversation?.messages
         .map((msg) => {
-          const role = msg.role === "user" ? "You" : preferences.botName;
+          const role = msg.role === "user" ? "You" : preferences.model;
           const time = new Date(msg.timestamp).toLocaleTimeString("zh-CN");
           return `${role} ${time}\n${msg.content}`;
         })
         .join("\n\n---\n\n") || "",
-    [conversation?.messages.length, preferences.botName]
+    [conversation?.messages.length, preferences.model]
   );
 
   const conversationMetadata = useMemo(
@@ -359,7 +356,7 @@ function ChatView({
       
       return (
         <Detail.Metadata>
-          <Detail.Metadata.Label title="🤖 Bot" text={conversation.botName} />
+          <Detail.Metadata.Label title="模型" text={conversation.botName} />
           <Detail.Metadata.Separator />
           
           <Detail.Metadata.Label 
@@ -530,16 +527,8 @@ function MessageInput({
         value={message}
         onChange={setMessage}
         autoFocus
-        onKeyDown={(e) => {
-          // Only handle pure ESC key (no modifiers)
-          if (e.nativeEvent.key === "Escape" && !e.nativeEvent.shiftKey && !e.nativeEvent.ctrlKey && !e.nativeEvent.metaKey && !e.nativeEvent.altKey) {
-            e.nativeEvent.preventDefault();
-            e.nativeEvent.stopPropagation();
-            handleCancel();
-          }
-        }}
       />
-      <Form.Description text="💡 提示：按 Enter 换行，按 ⌘+Enter 发送消息，按 Esc 取消" />
+      <Form.Description text="💡 提示：按 Enter 换行，按 ⌘+Enter 发送，点「取消」关闭" />
     </Form>
   );
 }

@@ -133,7 +133,7 @@ function ConversationDetail({ conversation }: { conversation: Conversation }) {
   // 生成完整的对话内容 markdown
   const fullMarkdown = useMemo(() => {
     const header = `# ${conversation.title}\n\n`;
-    const metadata = `**机器人:** ${conversation.botName} | **消息数:** ${conversation.messages.length} | **创建时间:** ${new Date(conversation.createdAt).toLocaleString("zh-CN")}\n\n---\n\n`;
+    const metadata = `**模型:** ${conversation.botName} | **消息数:** ${conversation.messages.length} | **创建时间:** ${new Date(conversation.createdAt).toLocaleString("zh-CN")}\n\n---\n\n`;
     
     const messages = conversation.messages
       .map((msg, index) => {
@@ -184,7 +184,7 @@ function ConversationDetail({ conversation }: { conversation: Conversation }) {
       navigationTitle={conversation.title}
       metadata={
         <Detail.Metadata>
-          <Detail.Metadata.Label title="机器人" text={conversation.botName} />
+          <Detail.Metadata.Label title="模型" text={conversation.botName} />
           <Detail.Metadata.Label 
             title="消息数" 
             text={`${conversation.messages.length} 条`} 

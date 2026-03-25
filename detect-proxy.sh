@@ -1,93 +1,56 @@
 #!/bin/bash
 
-echo "🔍 Raycast 扩展代理检测工具"
+# 检测本机常见代理端口，并用示例 HTTPS 目标测试直连 / 走代理
+# 目标 URL 仅用于连通性（返回 401 等也可能表示网络已通）
+
+TEST_URL="${TEST_URL:-https://api.openai.com/v1/models}"
+
+echo "🔍 Raycast 扩展 — 代理检测"
 echo "=============================="
+echo "测试 URL: $TEST_URL"
 echo ""
 
-# 检查系统代理设置
-echo "📡 系统代理设置:"
-scutil --proxy | grep -E "(HTTPEnable|HTTPProxy|HTTPPort|HTTPSEnable|HTTPSProxy|HTTPSPort)"
+echo "📡 系统代理 (macOS scutil):"
+scutil --proxy 2>/dev/null | grep -E "(HTTPEnable|HTTPProxy|HTTPPort|HTTPSEnable|HTTPSProxy|HTTPSPort)" || true
 echo ""
 
-# 检查环境变量
-echo "🌍 环境变量代理设置:"
+echo "🌍 环境变量:"
 echo "HTTP_PROXY: ${HTTP_PROXY:-未设置}"
 echo "HTTPS_PROXY: ${HTTPS_PROXY:-未设置}"
-echo "http_proxy: ${http_proxy:-未设置}"
-echo "https_proxy: ${https_proxy:-未设置}"
-echo "ALL_PROXY: ${ALL_PROXY:-未设置}"
 echo ""
 
-# 常见代理端口检测
-echo "🔌 检测常见代理端口:"
+echo "🔌 常见本地代理端口:"
 for port in 1087 7890 8888 1080 7891; do
   if lsof -i :"$port" > /dev/null 2>&1; then
-    echo "  ✅ 端口 $port 正在使用"
-    lsof -i :"$port" | grep LISTEN | awk '{print "     进程: " $1 " (PID: " $2 ")"}'
+    echo "  ✅ 端口 $port 正在监听"
+    lsof -i :"$port" | grep LISTEN | awk '{print "     " $1 " (PID " $2 ")"}'
   else
-    echo "  ❌ 端口 $port 未使用"
+    echo "  — 端口 $port 未使用"
   fi
 done
 echo ""
 
-# 测试直接连接
-echo "🌐 测试直接连接 Poe API:"
-if curl -s --connect-timeout 5 https://api.poe.com/v1/ > /dev/null 2>&1; then
-  echo "  ✅ 可以直接连接"
+echo "🌐 直连 $TEST_URL (约 5s 超时):"
+if curl -sS --connect-timeout 5 -o /dev/null -w "HTTP %{http_code}\n" "$TEST_URL" 2>/dev/null; then
+  :
 else
-  echo "  ❌ 无法直接连接（可能需要代理）"
+  echo "  ❌ 直连失败（可能需要代理）"
 fi
 echo ""
 
-# 推荐配置
-echo "💡 推荐配置:"
-echo ""
-echo "如果你使用 Clash/ClashX:"
-echo "  代理地址: http://127.0.0.1:7890"
-echo ""
-echo "如果你使用 V2RayU:"
-echo "  代理地址: http://127.0.0.1:1087"
-echo ""
-echo "如果你使用 Surge:"
-echo "  代理地址: http://127.0.0.1:6152"
-echo ""
-echo "如果你使用 Shadowsocks:"
-echo "  代理地址: socks5://127.0.0.1:1080"
-echo ""
-echo "⚙️  配置步骤:"
-echo "1. 打开 Raycast 设置 (⌘ + ,)"
-echo "2. Extensions → Poe Talk"
-echo "3. 在 'Proxy URL' 中填入上面的代理地址"
-echo "4. 保存并重试"
+echo "💡 在 Raycast → LLM Talk 中填写 Proxy URL，例如:"
+echo "   http://127.0.0.1:7890"
 echo ""
 
-# 检测 Clash
-if pgrep -x "ClashX" > /dev/null || pgrep -x "Clash" > /dev/null; then
-  echo "✅ 检测到 ClashX 正在运行"
-  echo "   建议使用: http://127.0.0.1:7890"
-  echo ""
-fi
-
-# 检测 V2Ray
-if pgrep -x "V2RayU" > /dev/null || pgrep -x "v2ray" > /dev/null; then
-  echo "✅ 检测到 V2Ray 正在运行"
-  echo "   建议使用: http://127.0.0.1:1087"
-  echo ""
-fi
-
-echo "🧪 测试代理连接 (使用检测到的端口):"
+echo "🧪 经代理测试 (仅测常见端口):"
 for port in 7890 1087 1080; do
   if lsof -i :"$port" > /dev/null 2>&1; then
-    echo "  测试 http://127.0.0.1:$port ..."
-    if curl -s --connect-timeout 3 -x "http://127.0.0.1:$port" https://api.poe.com/v1/ > /dev/null 2>&1; then
-      echo "  ✅ 通过 127.0.0.1:$port 可以连接到 Poe API"
-      echo "  👉 在 Raycast 设置中使用: http://127.0.0.1:$port"
-      echo ""
-    else
-      echo "  ❌ 通过 127.0.0.1:$port 无法连接"
-    fi
+    echo "  尝试 http://127.0.0.1:$port ..."
+    code=$(curl -sS --connect-timeout 4 -x "http://127.0.0.1:$port" -o /dev/null -w "%{http_code}" "$TEST_URL" 2>/dev/null || echo "err")
+    echo "  → HTTP $code （401/403 也可能表示已连通）"
   fi
 done
 
+echo ""
 echo "=============================="
-echo "✅ 检测完成"
+echo "✅ 检测结束"

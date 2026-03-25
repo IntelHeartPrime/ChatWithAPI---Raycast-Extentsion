@@ -1,19 +1,12 @@
-import { getPreferenceValues, showToast, Toast } from "@raycast/api";
+import { showToast, Toast } from "@raycast/api";
 import { PoeClient } from "./poe-client";
-
-interface Preferences {
-  poeApiKey: string;
-  botName: string;
-  proxyUrl?: string;
-  refererUrl?: string;
-  appTitle?: string;
-}
+import { getLlmPreferences } from "./llm-preferences";
 
 export async function testPoeConnection(): Promise<boolean> {
-  const preferences = getPreferenceValues<Preferences>();
+  const preferences = getLlmPreferences();
 
-  if (!preferences.poeApiKey) {
-    showToast(Toast.Style.Failure, "未配置 API Key", "请在设置中添加 Poe API Key");
+  if (!preferences.apiKey) {
+    showToast(Toast.Style.Failure, "未配置 API Key", "请在设置中添加 API Key");
     return false;
   }
 
@@ -24,13 +17,15 @@ export async function testPoeConnection(): Promise<boolean> {
 
   try {
     console.log("🔧 测试配置:");
-    console.log("  Bot:", preferences.botName);
+    console.log("  Model:", preferences.model);
+    console.log("  Base URL:", preferences.apiBaseUrl);
     console.log("  Proxy:", preferences.proxyUrl || "未配置");
-    console.log("  API Key:", preferences.poeApiKey ? "已配置 (" + preferences.poeApiKey.substring(0, 10) + "...)" : "未配置");
+    console.log("  API Key:", preferences.apiKey ? "已配置 (" + preferences.apiKey.substring(0, 10) + "...)" : "未配置");
 
     const client = new PoeClient({
-      apiKey: preferences.poeApiKey,
-      botName: preferences.botName || "Claude-Sonnet-4.5",
+      apiKey: preferences.apiKey,
+      model: preferences.model || "gpt-4o-mini",
+      apiBaseUrl: preferences.apiBaseUrl,
       proxyUrl: preferences.proxyUrl,
       refererUrl: preferences.refererUrl,
       appTitle: preferences.appTitle,
@@ -52,7 +47,7 @@ export async function testPoeConnection(): Promise<boolean> {
     if (response) {
       toast.style = Toast.Style.Success;
       toast.title = "✅ 连接成功";
-      toast.message = `Bot: ${preferences.botName}${preferences.proxyUrl ? " (使用代理)" : ""}`;
+      toast.message = `Model: ${preferences.model}${preferences.proxyUrl ? " (使用代理)" : ""}`;
       return true;
     }
 
@@ -98,11 +93,6 @@ export async function testPoeConnection(): Promise<boolean> {
 export async function validateApiKey(apiKey: string): Promise<{ valid: boolean; error?: string }> {
   if (!apiKey || apiKey.trim().length === 0) {
     return { valid: false, error: "API Key 不能为空" };
-  }
-
-  // Basic format check
-  if (!apiKey.startsWith("pk_") && !apiKey.startsWith("sk_")) {
-    return { valid: false, error: "API Key 格式可能不正确（应以 pk_ 或 sk_ 开头）" };
   }
 
   return { valid: true };

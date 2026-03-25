@@ -1,68 +1,76 @@
-# Poe Talk - Raycast Extension
+# LLM Talk - Raycast Extension
 
-A Raycast extension to talk with Poe AI bots and automatically save conversation history.
+A Raycast extension for chatting with any OpenAI-compatible API (OpenAI, JieKou AI, DeepSeek, local Ollama, etc.) with automatic conversation history.
 
 ## Features
 
-- 🤖 **Ask Poe AI**: Quick command to send messages to any Poe bot
+- 🤖 **Chat with any LLM**: Supports any OpenAI-compatible endpoint
+- 🌐 **Relay platform support**: Works with JieKou AI, OpenRouter, and other relay services
 - 💬 **Conversation History**: Automatically saves all conversations locally
 - 📝 **Browse & Manage**: View and delete past conversations
-- 🔐 **Secure**: Uses your personal Poe API key
-- ⚡ **Fast**: Built with streaming support for quick responses
+- 🔐 **Secure**: API key stored in Raycast's secure preferences
+- ⚡ **Streaming**: Real-time streaming output for faster responses
 
 ## Setup
 
-### 1. Get Your Poe API Key
+### 1. Get your API Key
 
-1. Visit [poe.com/api_key](https://poe.com/api_key)
-2. Sign in to your Poe account
-3. Copy your API key
+- **OpenAI**: https://platform.openai.com/api-keys
+- **JieKou AI**: https://jiekou.ai (管理 API 密钥)
+- **DeepSeek**: https://platform.deepseek.com
+- **Other relay platforms**: See the platform's documentation
 
 ### 2. Configure the Extension
 
-1. Open Raycast preferences (⌘ + ,)
-2. Navigate to Extensions → Poe Talk
-3. Enter your Poe API key
-4. Choose your preferred bot (e.g., Claude-Sonnet-4.5, GPT-5, Grok-4)
-5. (Optional) Set Referer URL and App Title for leaderboard tracking
+1. Open Raycast preferences (`⌘ + ,`)
+2. Navigate to **Extensions → LLM Talk**
+3. Fill in:
+   - **API Key**: Your API key from the chosen platform
+   - **Model**: The model ID to use (see examples below)
+   - **API Base URL**: The endpoint base URL for your provider
+
+### 3. API Base URL Examples
+
+| Platform | Base URL |
+|---|---|
+| OpenAI (official) | `https://api.openai.com/v1` |
+| JieKou AI | `https://api.jiekou.ai/openai` |
+| DeepSeek | `https://api.deepseek.com/v1` |
+| OpenRouter | `https://openrouter.ai/api/v1` |
+| Local Ollama | `http://localhost:11434/v1` |
+
+### 4. Model ID Examples
+
+| Platform | Model IDs |
+|---|---|
+| OpenAI | `gpt-4o`, `gpt-4o-mini`, `o1` |
+| JieKou AI | `deepseek/deepseek-r1`, `anthropic/claude-3-5-sonnet` |
+| DeepSeek | `deepseek-chat`, `deepseek-reasoner` |
+| OpenRouter | `openai/gpt-4o`, `google/gemini-2.0-flash-001` |
 
 ## Usage
 
-### Chat with Poe AI (Interactive)
+### Chat with AI (Interactive)
 
-1. Open Raycast (⌘ + Space)
-2. Type "Chat with Poe AI"
-3. A chat window opens where you can:
-   - Send messages by clicking "发送消息"
-   - See the full conversation history
-   - Continue the conversation with multiple turns
-   - Start a new conversation (⌘ + N)
-   - Copy the last response (⌘ + C)
-4. All conversations are automatically saved
-
-### Quick Ask Poe AI (Single Message)
-
-1. Open Raycast (⌘ + Space)
-2. Type "Quick Ask Poe AI"
-3. Enter your message
-4. The AI response will be copied to your clipboard
-5. Conversation is automatically saved
+1. Open Raycast (`⌘ + Space`)
+2. Type **"Chat with AI"**
+3. A chat window opens:
+   - Press `⌘+Enter` to send a message
+   - Press `⌘+N` to start a new conversation
+   - Press `⌘+C` to copy the last response
+   - Press `⌘+Shift+C` to copy the full conversation
 
 ### Browse Conversation History
 
-1. Open Raycast (⌘ + Space)
-2. Type "Browse Poe Conversations"
-3. View all your past conversations
-4. Click to view details or delete conversations
+1. Open Raycast (`⌘ + Space`)
+2. Type **"Browse AI Conversations"**
+3. View, search and manage all past conversations
 
-## Available Bots
+### Test API Connection
 
-Popular Poe bots you can use:
-- `Claude-Sonnet-4.5` - Anthropic's Claude
-- `Claude-Opus-4.1` - Claude Opus model
-- `GPT-5` - OpenAI's GPT-5
-- `Grok-4` - xAI's Grok
-- `Imagen-4` - Google's image generation
+1. Open Raycast (`⌘ + Space`)
+2. Type **"Test API Connection"**
+3. A quick connectivity check is run and the result is shown
 
 ## Storage
 
@@ -71,39 +79,19 @@ Conversations are stored locally at:
 ~/Library/Application Support/com.raycast.macos/extensions/poe-talk/conversations/
 ```
 
-Each conversation is saved as a JSON file with:
-- Conversation ID and title
-- All messages (user and AI)
-- Timestamps
-- Bot name used
+Each conversation is saved as a JSON file with all messages and timestamps.
 
-## Leaderboard Attribution (Optional)
+## Optional Proxy
 
-If you want your usage to appear on [Poe's leaderboard](https://poe.com/leaderboard):
-
-1. Set **Referer URL** to your website/app URL
-2. Set **App Title** to your application name
-
-These headers help attribute your API requests to your application.
+If you need an HTTP/HTTPS proxy (e.g. Clash on `http://127.0.0.1:7890`), add it under **Proxy URL** in the extension settings.
 
 ## Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Run in development mode
-npm run dev
-
-# Build for production
-npm run build
+npm run dev    # hot-reload development mode
+npm run build  # production build
 ```
-
-## Requirements
-
-- Raycast
-- Poe account with API access
-- macOS or Windows
 
 ## License
 

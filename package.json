@@ -1,8 +1,8 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "poe-talk",
-  "title": "Poe-talk",
-  "description": "",
+  "name": "api-talk",
+  "title": "api-talk",
+  "description": "Chat with OpenAI-compatible LLM APIs (OpenAI, relays, local).",
   "icon": "extension-icon.png",
   "author": "IntelHeartPrime",
   "platforms": [
@@ -16,32 +16,32 @@
   "commands": [
     {
       "name": "poe-talking-chat",
-      "title": "Chat with Poe AI",
-      "subtitle": "Poe",
-      "description": "Interactive chat interface with Poe AI",
+      "title": "Chat with AI (OpenAI-Compatible)",
+      "subtitle": "api-talk",
+      "description": "Interactive chat interface with OpenAI-compatible APIs",
       "mode": "view",
       "icon": "poe_icon.png"
     },
     {
       "name": "poe-talking-history",
-      "title": "Browse Poe Conversations",
-      "subtitle": "Poe",
-      "description": "Browse and manage your Poe conversation history",
+      "title": "Browse AI Conversations",
+      "subtitle": "api-talk",
+      "description": "Browse and manage your conversation history",
       "mode": "view",
       "icon": "💬"
     },
     {
       "name": "poe-test-connection",
-      "title": "Test Poe Connection",
-      "subtitle": "Poe",
-      "description": "Test your Poe API connection and settings",
+      "title": "Test API Connection",
+      "subtitle": "api-talk",
+      "description": "Test your OpenAI-compatible API connection and settings",
       "mode": "no-view",
       "icon": "🔌"
     },
     {
       "name": "poe-clear-history",
       "title": "Clear All Conversations",
-      "subtitle": "Poe",
+      "subtitle": "api-talk",
       "description": "Delete all conversation history",
       "mode": "no-view",
       "icon": "🗑️"
@@ -49,18 +49,26 @@
   ],
   "preferences": [
     {
-      "name": "poeApiKey",
-      "title": "Poe API Key",
-      "description": "Your Poe API key from poe.com/api_key",
+      "name": "apiKey",
+      "title": "API Key",
+      "description": "Your API key for an OpenAI-compatible endpoint",
       "type": "password",
       "required": true
     },
     {
-      "name": "botName",
-      "title": "Bot Name",
-      "description": "The Poe bot to use (e.g., Claude-Sonnet-4.5, GPT-5, Grok-4)",
+      "name": "model",
+      "title": "Model",
+      "description": "Model ID (e.g., gpt-4o-mini, deepseek/deepseek-r1, Claude-Sonnet-4.5)",
       "type": "textfield",
-      "default": "Claude-Sonnet-4.5",
+      "default": "gpt-4o-mini",
+      "required": true
+    },
+    {
+      "name": "apiBaseUrl",
+      "title": "API Base URL",
+      "description": "OpenAI-compatible base URL (e.g., https://api.openai.com/v1 or https://api.jiekou.ai/openai)",
+      "type": "textfield",
+      "default": "https://api.openai.com/v1",
       "required": true
     },
     {
@@ -74,14 +82,28 @@
     {
       "name": "refererUrl",
       "title": "Referer URL (Optional)",
-      "description": "HTTP-Referer header for leaderboard attribution",
+      "description": "HTTP-Referer header (useful for some relay providers)",
       "type": "textfield",
       "required": false
     },
     {
       "name": "appTitle",
       "title": "App Title (Optional)",
-      "description": "X-Title header for leaderboard display name",
+      "description": "X-Title header (useful for some relay providers)",
+      "type": "textfield",
+      "required": false
+    },
+    {
+      "name": "poeApiKey",
+      "title": "Legacy API Key (migration)",
+      "description": "Older releases stored the key under this id. If the main API Key reads empty but chat used to work, your key may still be here—we merge it automatically when the main field is empty.",
+      "type": "password",
+      "required": false
+    },
+    {
+      "name": "botName",
+      "title": "Legacy model / bot name (migration)",
+      "description": "Older releases used this field for the model id. Used when Model is empty.",
       "type": "textfield",
       "required": false
     }

@@ -1,72 +1,56 @@
 #!/bin/bash
 
-# Poe Talk Extension - Quick Start Script
+# LLM Talk (poe-talk) — 快速初始化脚本
 
-echo "🚀 Poe Talk Extension Setup"
+echo "🚀 LLM Talk Extension Setup"
 echo "=========================="
 echo ""
 
-# Check if Node.js is installed
 if ! command -v node &> /dev/null; then
-    echo "❌ Node.js is not installed. Please install it first."
-    echo "   Visit: https://nodejs.org/"
+    echo "❌ 未检测到 Node.js，请先安装: https://nodejs.org/"
     exit 1
 fi
 
-echo "✅ Node.js version: $(node --version)"
+echo "✅ Node.js: $(node --version)"
 echo ""
 
-# Check if npm is installed
 if ! command -v npm &> /dev/null; then
-    echo "❌ npm is not installed."
+    echo "❌ 未检测到 npm"
     exit 1
 fi
 
-echo "✅ npm version: $(npm --version)"
+echo "✅ npm: $(npm --version)"
 echo ""
 
-# Check if dependencies are installed
 if [ ! -d "node_modules" ]; then
-    echo "📦 Installing dependencies..."
+    echo "📦 安装依赖..."
     npm install
     echo ""
 fi
 
-# Check if Raycast CLI is available
 if ! command -v ray &> /dev/null; then
-    echo "⚠️  Raycast CLI not found. Installing it may be helpful for development."
-    echo "   The extension can still work without it."
+    echo "⚠️  未找到 Raycast CLI（ray），开发时可从 Raycast 菜单安装 CLI。"
     echo ""
 fi
 
-# Build the extension
-echo "🔨 Building extension..."
+echo "🔨 构建扩展..."
 npm run build
 
 if [ $? -eq 0 ]; then
     echo ""
-    echo "✅ Extension built successfully!"
+    echo "✅ 构建成功"
     echo ""
-    echo "📝 Next steps:"
-    echo "   1. Get your Poe API key from: https://poe.com/api_key"
-    echo "   2. Open Raycast preferences (⌘ + ,)"
-    echo "   3. Navigate to Extensions → Poe Talk"
-    echo "   4. Enter your API key and configure bot settings"
-    echo "   5. Try the extension:"
-    echo "      - Open Raycast (⌘ + Space)"
-    echo "      - Type 'Ask Poe AI'"
-    echo "      - Enter your message"
+    echo "📝 下一步:"
+    echo "   1. Raycast → 设置 (⌘,) → Extensions → 本扩展"
+    echo "   2. 填写 API Key、Model、API Base URL（OpenAI 兼容地址）"
+    echo "   3. 如需翻墙，填写 Proxy URL，例如 http://127.0.0.1:7890"
+    echo "   4. 运行「Test API Connection」自测"
+    echo "   5. 开发调试: npm run dev"
     echo ""
-    echo "📚 Documentation:"
-    echo "   - README.md - Main documentation"
-    echo "   - USAGE.md - User guide"
-    echo "   - ARCHITECTURE.md - Technical details"
-    echo ""
-    echo "🔧 Development:"
-    echo "   - Run 'npm run dev' for development mode with hot reload"
+    echo "📚 文档: README.md、USAGE.md、TROUBLESHOOTING.md"
     echo ""
 else
     echo ""
-    echo "❌ Build failed. Check the errors above."
+    echo "❌ 构建失败，请查看上方错误信息"
     exit 1
 fi

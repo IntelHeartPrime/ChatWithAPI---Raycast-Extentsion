@@ -2,9 +2,11 @@
 
 ## Initial Setup
 
-1. **Get your Poe API Key**
-   - Go to https://poe.com/api_key
-   - Copy your API key
+1. **Get your API Key**
+   - OpenAI: https://platform.openai.com/api-keys
+   - JieKou AI: https://jiekou.ai
+   - DeepSeek: https://platform.deepseek.com
+   - Any other OpenAI-compatible relay platform
 
 2. **Install the extension in Raycast**
    ```bash
@@ -13,28 +15,23 @@
    ```
 
 3. **Configure settings**
-   - Open Raycast settings (⌘ + ,)
-   - Find "Poe Talk" extension
-   - Add your API key
-   - Select your preferred bot (default: Claude-Sonnet-4.5)
+   - Open Raycast settings (`⌘ + ,`)
+   - Find **"LLM Talk"** extension
+   - Fill in **API Key**, **Model**, and **API Base URL**
 
 ## Commands
 
-### 1. Ask Poe AI
-**Usage**: Open Raycast → Type "Ask Poe AI" → Enter your message
+### 1. Chat with AI (Interactive)
+**Usage**: Open Raycast → Type "Chat with AI"
 
 **What happens**:
-- Your message is sent to the configured Poe bot
-- The response is automatically copied to your clipboard
-- The conversation is saved to your local history
+- A chat window opens
+- Send messages with `⌘+Enter`
+- Responses stream in real time
+- Conversation is automatically saved
 
-**Example**:
-```
-Ask Poe AI "Explain quantum computing in simple terms"
-```
-
-### 2. Browse Poe Conversations
-**Usage**: Open Raycast → Type "Browse Poe Conversations"
+### 2. Browse AI Conversations
+**Usage**: Open Raycast → Type "Browse AI Conversations"
 
 **Features**:
 - View all saved conversations
@@ -44,115 +41,121 @@ Ask Poe AI "Explain quantum computing in simple terms"
 - View full conversation details
 
 **Keyboard shortcuts**:
-- `⌘ + Delete` - Delete selected conversation
-- `⌘ + R` - Refresh list
-- `Enter` - View conversation details
+- `⌘ + Delete` – Delete selected conversation
+- `⌘ + R` – Refresh list
+- `Enter` – View conversation details
 
 ## Configuration Options
 
 ### Required Settings
 
 | Setting | Description | Example |
-|---------|-------------|---------|
-| Poe API Key | Your personal API key from Poe | `pk_***` |
-| Bot Name | The Poe bot to use | `Claude-Sonnet-4.5` |
+|---|---|---|
+| API Key | Your API key | `sk-...` or `pk_...` |
+| Model | Model ID | `gpt-4o-mini` |
+| API Base URL | Provider endpoint | `https://api.openai.com/v1` |
 
 ### Optional Settings
 
 | Setting | Description | Purpose |
-|---------|-------------|---------|
-| Referer URL | Your app/website URL | Leaderboard attribution |
-| App Title | Your app display name | Leaderboard display |
+|---|---|---|
+| Proxy URL | HTTP/HTTPS proxy URL | Traffic via local proxy tool |
+| Referer URL | HTTP-Referer header | Some relay platforms need this |
+| App Title | X-Title header | Some relay platforms need this |
 
-## Popular Bot Names
+## Provider Quick Reference
 
-- **Claude Models**:
-  - `Claude-Sonnet-4.5` (recommended)
-  - `Claude-Opus-4.1`
-  - `Claude-3.5-Haiku`
+### OpenAI (Official)
+```
+API Base URL : https://api.openai.com/v1
+Model        : gpt-4o-mini
+```
 
-- **OpenAI Models**:
-  - `GPT-5`
-  - `GPT-4o`
-  - `o1`
+### JieKou AI
+```
+API Base URL : https://api.jiekou.ai/openai
+Model        : deepseek/deepseek-r1
+```
+Full model list: https://jiekou.ai/#model-library
 
-- **Other Models**:
-  - `Grok-4` (xAI)
-  - `Gemini-Pro` (Google)
-  - `Imagen-4` (Image generation)
+### DeepSeek
+```
+API Base URL : https://api.deepseek.com/v1
+Model        : deepseek-chat
+```
+
+### OpenRouter
+```
+API Base URL : https://openrouter.ai/api/v1
+Model        : openai/gpt-4o
+```
+
+### Local Ollama
+```
+API Base URL : http://localhost:11434/v1
+API Key      : ollama   (any non-empty string)
+Model        : llama3.2
+```
 
 ## Where is data stored?
 
 Conversations are stored locally at:
 - **macOS**: `~/Library/Application Support/com.raycast.macos/extensions/poe-talk/conversations/`
-- **Windows**: `%APPDATA%\Raycast\extensions\poe-talk\conversations\`
 
-Each conversation is a JSON file containing:
+Each conversation is a JSON file:
 ```json
 {
   "id": "conv_1234567890_abc123",
   "title": "Explain quantum computing...",
   "messages": [
-    {
-      "role": "user",
-      "content": "Your message",
-      "timestamp": 1234567890000
-    },
-    {
-      "role": "assistant",
-      "content": "AI response",
-      "timestamp": 1234567891000
-    }
+    { "role": "user", "content": "Your message", "timestamp": 1234567890000 },
+    { "role": "assistant", "content": "AI response", "timestamp": 1234567891000 }
   ],
   "createdAt": 1234567890000,
   "updatedAt": 1234567891000,
-  "botName": "Claude-Sonnet-4.5"
+  "botName": "gpt-4o-mini"
 }
 ```
 
 ## Troubleshooting
 
-### "Please configure Poe API Key" error
-- Go to Raycast settings → Poe Talk
-- Make sure your API key is entered correctly
-- Verify the key at https://poe.com/api_key
+### "请在扩展设置中配置 API Key"
+- Go to Raycast settings → LLM Talk
+- Make sure **API Key** is filled in
 
-### "Cannot communicate with Poe" error
-- Check your internet connection
-- Verify your API key is valid
-- Make sure the bot name is correct
-- Check if you have available Poe credits
+### "模型 '...' 或接口地址不存在" (404)
+- Double-check **Model** ID – it must match the provider's model list exactly
+- Double-check **API Base URL** – no trailing slash needed
 
-### Conversations not showing up
-- Check the storage directory exists
-- Verify file permissions
-- Try refreshing the list (⌘ + R)
+### Request timeout
+- If you need a proxy, set it under **Proxy URL** (e.g. `http://127.0.0.1:7890`)
+- Test connectivity with the **"Test API Connection"** command
 
-## Tips & Tricks
+### API Key invalid (401)
+- Regenerate your API key on the provider's dashboard
+- Make sure there are no leading/trailing spaces in the key field
 
-1. **Quick Access**: Create a Raycast hotkey for "Ask Poe AI"
-2. **Multiple Bots**: Change the bot in settings to experiment with different models
-3. **Clipboard Integration**: Responses are auto-copied, just paste (⌘ + V) to use them
-4. **Search History**: Use the search bar in history to find old conversations
-5. **Backup**: The conversations folder can be backed up/synced to preserve history
+## 命令行快速测通（可选）
 
-## API Usage & Costs
+在项目目录下可用脚本验证 **API Key / Base URL / 代理**（与扩展内 `normalize` 规则一致）：
 
-- Requests use your Poe account's points
-- Rate limit: 500 requests per minute per user
-- Check your usage at https://poe.com/settings
-- Consider upgrading to Poe subscription for more points
+```bash
+export API_KEY="你的密钥"
+export API_BASE_URL="https://api.jiekou.ai/openai"   # 或 OpenAI 等
+export MODEL="deepseek/deepseek-r1"
+export PROXY_URL="http://127.0.0.1:7890"           # 不需要可 unset
+chmod +x ./test-api.sh
+./test-api.sh
+```
 
-## Privacy & Security
+Node + OpenAI SDK 示例：
 
-- ✅ API key stored securely in Raycast preferences
-- ✅ Conversations stored locally only
-- ✅ No data sent to third parties
-- ✅ You own all your conversation data
-- ⚠️ API key gives access to your Poe account - keep it secure
+```bash
+export API_KEY="你的密钥"
+export API_BASE_URL="https://api.openai.com/v1"
+export MODEL="gpt-4o-mini"
+export PROXY_URL="http://127.0.0.1:7890"
+node test-proxy-node.js
+```
 
-## Need Help?
-
-- Check the main README.md for more details
-- Visit Poe documentation: https://creator.poe.com/docs
-- Raycast documentation: https://developers.raycast.com
+代理端口扫描：`./detect-proxy.sh`（可用 `TEST_URL` 指向你的 `.../v1/models` 等）。
